@@ -4,15 +4,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-
 import org.json.JSONObject;
-
-import lombok.Builder;
-import lombok.Data;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public class SocketClient {
 	//필드
@@ -36,7 +28,7 @@ public class SocketClient {
 			InetSocketAddress isa = (InetSocketAddress) socket.getRemoteSocketAddress();
 			this.clientIp = isa.getHostName();
 			this.roomManager = roomManager;
-			//this.room=roomManager.loadRoom(this);
+			
 			receive();
 		} catch(IOException e) {
 		}
@@ -53,14 +45,7 @@ public class SocketClient {
 					JSONObject jsonObject = new JSONObject(receiveJson);
 					String command = jsonObject.getString("command");
 					
-					/*
-					입장 : incoming,이름
-					{command:incoming, data:'홍길동'}
 					
-					 채팅 : message,내용
-					{command:message, data:'안녕'}
-					
-					*/
 					switch(command) {
 					case "login":
 						login(jsonObject);
@@ -75,16 +60,8 @@ public class SocketClient {
 						updateMember(jsonObject);
 						stop = true;
 						break;
-
-					case "incoming":
-						this.chatName = jsonObject.getString("data");
-						chatServer.sendToAll(this, "들어오셨습니다.");
-						chatServer.addSocketClient(this);
-						break;
 					case "message":
 						String message = jsonObject.getString("data");
-						
-						//chatServer.sendToAll(this, message);
 						chatServer.sendMessage(this, message);
 						break;
 						
@@ -101,31 +78,27 @@ public class SocketClient {
 						chatEnter(jsonObject);
 						stop = true;
 						break;
-						
-					case "chatexit":
-						chatExit();
-						stop = true;
-						break;
 					case "chatrm":
 						removeRoom(jsonObject);
 						stop = true;
 						break;
 					case "endchat":
+						this.sendWithOutMe("님이 나갔습니다.");
 						stop = true;
 						break;
 					case "chatstart":
 						startChat(jsonObject);
 						break;
-
 					}
 				}
 			} catch(IOException e) {
 				e.printStackTrace();
-				chatServer.sendToAll(this, "나가셨습니다.");
 				chatServer.removeSocketClient(this);
 			}
 		});
 	}
+	
+	
 	public void chatList() {
 
 		String roomStatus;
@@ -138,8 +111,6 @@ public class SocketClient {
             roomStatus = roomStatus.substring(0,roomStatus.length()-1);
         }
         
-        //roomStatus += "]";
-
 		JSONObject jsonResult = new JSONObject();
 
 
@@ -154,28 +125,25 @@ public class SocketClient {
 	public void startChat(JSONObject jsonObject) {
 		
 		this.chatName = jsonObject.getString("chatName");
-		roomManager.roomRecord.get(chatName).clients.add(this);
-
+		this.room=roomManager.loadRoom(this.chatName);
+		this.sendWithOutMe("님이 들어오셨습니다.");
+		room.clients.add(this);
+		
 	}
-	public void chatExit() {
-		
-		
-		
-
-		JSONObject jsonResult = new JSONObject();
-
-
-		//jsonResult.put("message", );
-
-
-
-
-
-		send(jsonResult.toString());
-
-		close();
-
+	
+	public void sendWithOutMe(String message) {
+		JSONObject root = new JSONObject();
+		root.put("chatName", this.chatName);
+		for (SocketClient c : this.room.clients) {
+			if (!c.equals(this)) {
+				root.put("message", message);
+				String json = root.toString();
+				c.send(json);
+			}
+		}
 	}
+	
+
 	
 
 	
@@ -225,26 +193,22 @@ public class SocketClient {
 
 		int chatNo = Integer.parseInt(jsonObject.getString("chatNo"));
 		this.chatName = jsonObject.getString("data");
-		
+
 		JSONObject jsonResult = new JSONObject();
 
 		jsonResult.put("statusCode", "-1");
 		jsonResult.put("message", "해당번호 채팅방이 존재하지 않습니다.");
-		//if(room == null) {
-			for(Room room : roomManager.rooms) {
-				if(room.no == chatNo) {
-					jsonResult.put("statusCode", "0");
-					jsonResult.put("message", chatNo+"번 방에 입장했습니다.");
-					this.room=room;
-					room.entryRoom(this);
-					break;
-				}
 
+		for(Room room : roomManager.rooms) {
+			if(room.no == chatNo) {
+				jsonResult.put("statusCode", "0");
+				jsonResult.put("message", chatNo+"번 방에 입장했습니다.");
+				this.room=room;
+				room.entryRoom(this);
+				break;
 			}
-		//}
-		//else {
-		//	jsonResult.put("message", "이미 입장한 방이 있습니다.");
-		//}
+
+		}
 
 
 

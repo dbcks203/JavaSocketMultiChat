@@ -5,7 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
-
 import org.json.JSONObject;
 
 
@@ -38,12 +37,12 @@ public class ChatClient {
 					String json = dis.readUTF();
 					JSONObject root = new JSONObject(json);
 					//String clientIp = root.getString("clientIp");
-					//String chatName = root.getString("chatName");
+					String chatName = root.getString("chatName");
 					String message = root.getString("message");
-					System.out.println(message);
+					System.out.println("["+chatName+"] "+message);
 				}
 			} catch(Exception e1) {
-				//System.out.println("[클라이언트] 서버 연결 끊김");
+				//System.out.println("[채팅모드 종료]");
 				//System.exit(0);
 			}
 		});
@@ -194,10 +193,9 @@ public class ChatClient {
 			JSONObject jsonObject = new JSONObject();
 			jsonObject.put("command", "chatEnter");
 			jsonObject.put("chatNo", select);
-			//jsonObject.put("chatName", chatName);
-			//jsonObject.put("command", "incoming");
 			jsonObject.put("data", chatName);
 			String json = jsonObject.toString();
+			
 			send(json);
 			
 			isEnter = chatEnterResponse();
@@ -248,24 +246,7 @@ public class ChatClient {
 			e.printStackTrace();
 		}
 	}
-	public void exitRoom() {
-		try {
-			connect();
 
-			JSONObject jsonObject = new JSONObject();
-			jsonObject.put("command", "chatexit");
-
-			String json = jsonObject.toString();
-			send(json);
-
-			messagePrintResponse();
-			disconnect();
-
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 	
 	
 	public void removeRoom(Scanner scanner) {
@@ -296,7 +277,6 @@ public class ChatClient {
 	public void messagePrintResponse() throws Exception {
 		String json = dis.readUTF();
 		JSONObject root = new JSONObject(json);
-		//String statusCode = root.getString("statusCode");
 		String message = root.getString("message");
 
 		System.out.println(message);
@@ -330,7 +310,12 @@ public class ChatClient {
 					send(jsonObject.toString());
 				}
 			}
-			//scanner.close();
+			
+			
+			jsonObject.put("command", "endchat");
+			json = jsonObject.toString();
+			send(json);
+			
 			disconnect();
 
 		} catch (Exception e) {

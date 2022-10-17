@@ -106,8 +106,6 @@ public class ChatClientMain {
 					layer--;
 				System.out.println("로그아웃");
 				isMember= false;
-
-
 				break;
 
 				}

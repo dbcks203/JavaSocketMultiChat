@@ -19,18 +19,18 @@ public class ChatServer {
 	ExecutorService threadPool = Executors.newFixedThreadPool(100);
 	Map<String, SocketClient> chatRoom = Collections.synchronizedMap(new HashMap<>());
 	MemberRepository memberRepository = new MemberRepository();
-	
-	
+
+
 	RoomManager roomManager = new RoomManager();
 
 	//메소드: 서버 시작
 	public void start() throws IOException {
-		
+
 		memberRepository.loadMember();
-		
+
 		serverSocket = new ServerSocket(50001);	
 		System.out.println( "[서버] 시작됨");
-		
+
 		Thread thread = new Thread(() -> {
 			try {
 				while(true) {
@@ -42,6 +42,7 @@ public class ChatServer {
 		});
 		thread.start();
 	}
+	/*
 	//메소드: 클라이언트 연결시 SocketClient 생성 및 추가
 	public void addSocketClient(SocketClient socketClient) {
 		String key = socketClient.chatName + "@" + socketClient.clientIp;
@@ -49,79 +50,39 @@ public class ChatServer {
 		System.out.println("입장: " + key);
 		System.out.println("현재 채팅자 수: " + chatRoom.size() + "\n");
 	}
-
+*/
 	//메소드: 클라이언트 연결 종료시 SocketClient 제거
+	
 	public void removeSocketClient(SocketClient socketClient) {
 		String key = socketClient.chatName + "@" + socketClient.clientIp;
 		chatRoom.remove(key);
 		System.out.println("나감: " + key);
 		System.out.println("현재 채팅자 수: " + chatRoom.size() + "\n");
-	}		
-	//메소드: 모든 클라이언트에게 메시지 보냄
-	public void sendToAll(SocketClient sender, String message) {
-		JSONObject root = new JSONObject();
-		root.put("clientIp", sender.clientIp);
-		root.put("chatName", sender.chatName);
-		root.put("message", message);
-		String json = root.toString();
-		
-		//귀속말 존재 여부 확인 
-		if (message.indexOf("@") == 0) {
-			int pos = message.indexOf(" ");
-			String key = message.substring(1, pos);
-			message = "(귀속말)" + message.substring(pos+1);
-			
-			SocketClient targetClient = chatRoom.get(key);
-			if (null != targetClient) {
-				targetClient.send(json);	
-			}
-			
-		} else {
-			//체팅방에 있은 모든 사람(본인제외) 
-			chatRoom.values().stream()
-			.filter(socketClient -> socketClient != sender)
-			.forEach(socketClient -> socketClient.send(json));
-		}
 	}
-	
+
 	public void sendMessage(SocketClient sender, String message) {
 		JSONObject root = new JSONObject();
-		//root.put("clientIp", sender.clientIp);
-		//root.put("chatName", sender.chatName);
-		root.put("message", message);
-		String json = root.toString();
-		/*
-		//귀속말 존재 여부 확인 
+		root.put("chatName", sender.chatName);
+
+
 		if (message.indexOf("@") == 0) {
 			int pos = message.indexOf(" ");
 			String key = message.substring(1, pos);
-			message = "(귀속말)" + message.substring(pos+1);
-			
-			SocketClient targetClient = chatRoom.get(key);
-			if (null != targetClient) {
-				targetClient.send(json);	
+			for (SocketClient c : sender.room.clients) {
+				if (key.equals(c.chatName)) {
+					message = "(귀속말)  " + message.substring(pos+1);
+					root.put("message", message);
+					String json = root.toString();
+					c.send(json);
+				}
 			}
-			
-		} else {
-			//체팅방에 있은 모든 사람(본인제외) 
-			chatRoom.values().stream()
-			.filter(socketClient -> socketClient != sender)
-			.forEach(socketClient -> socketClient.send(json));
+
 		}
-		*/
-	
-		for (SocketClient c : roomManager.loadRoom(sender.chatName).clients) {
-            if (!c.equals(sender)) {
-                c.send(json);
-                
-            }
-            System.out.println(c);
-        }
-        
-		System.out.println(sender);
-		//sender.send(json);
+		else {
+			sender.sendWithOutMe(message);
+		}
 	}
-	
+
 	//메소드: 서버 종료
 	public void stop() {
 		try {
@@ -131,33 +92,25 @@ public class ChatServer {
 			System.out.println( "[서버] 종료됨 ");
 		} catch (IOException e1) {}
 	}
-	
+
 	public synchronized void registerMember(Member member) throws Member.ExistMember {
 		memberRepository.insertMember(member);
 	}
-	
+
 	public synchronized Member findByUid(String uid) throws Member.NotExistUidPwd {
 		return memberRepository.findByUid(uid);
 	}
-	
+
 	//메소드: 메인
 	public static void main(String[] args) {	
 		try {
 			ChatServer chatServer = new ChatServer();
 			chatServer.start();
-		
-			//String path = "C:\\Users\\한국소프트웨어산업협회\\git\\douzone\\lombok_app\\bin\\ch19\\sec14";
-			//System.out.println(path);
-			
-			//서버의 클래스 폴더 모니터링  
-			//Thread watchThread = new Thread(new ChatServerWatchService(path));
-			//watchThread.setDaemon(true);
-			//watchThread.start();
 
 			System.out.println("----------------------------------------------------");
-			System.out.println("서버를 종료하려면 q를 입력하고 Enter.");
+			System.out.println("[채팅모드를 종료하려면 q를 입력하고 Enter]");
 			System.out.println("----------------------------------------------------");
-			
+
 			Scanner scanner = new Scanner(System.in);
 			while(true) {
 				String key = scanner.nextLine();
