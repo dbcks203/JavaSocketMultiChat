@@ -3,16 +3,7 @@ package socketproject;
 import java.util.Scanner;
 
 public class ChatClientMain {
-
-
-	public void logout() {
-
-	}
-
-
-	public void exit() {
-
-	}
+	
 	public static void clientUi(int layer) {
 		if(layer == 0) {
 			System.out.println();
@@ -46,8 +37,11 @@ public class ChatClientMain {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-
-		ChatClient chatClient = new ChatClient();
+		
+		ClientControlMember memberClient = new ClientControlMember();
+		ClientControlChat chattingClient = new ClientControlChat();
+		ClientControlFile fileClient = new ClientControlFile();
+		
 		boolean stop = false;
 		boolean isMember = false;
 		boolean isEnter = false;
@@ -61,19 +55,19 @@ public class ChatClientMain {
 				String menuNum = scanner.nextLine();
 				switch(menuNum) {
 				case "1":
-					isMember = chatClient.login(scanner);
+					isMember = memberClient.login(scanner);
 					if(isMember)
 						layer++;
 					break;
 
 				case "2":
-					chatClient.registerMember(scanner);
+					//chatClient.memberClient.registerMember(scanner);
 					break;
 				case "3":
-					chatClient.passwdSearch(scanner);
+					memberClient.passwdSearch(scanner);
 					break;
 				case "4":
-					chatClient.updateMember(scanner);
+					memberClient.updateMember(scanner);
 					break;
 				case "Q", "q":
 					scanner.close();
@@ -82,25 +76,26 @@ public class ChatClientMain {
 				break;
 				}
 			}
+			
 			while(isMember && !isEnter) {
 				clientUi(layer);
 				String menuNum = scanner.nextLine();
 				switch(menuNum) {
 				case "1":
-					chatClient.chatList();
+					chattingClient.chatList();
 
 					break;
 
 				case "2":
-					chatClient.chatCreate(scanner,chatClient);
+					chattingClient.chatCreate(scanner);
 					break;
 				case "3":
-					isEnter = chatClient.chatEnter(scanner);
+					isEnter = chattingClient.chatEnter(scanner);
 					if(isEnter)
 						layer++;
 					break;
 				case "4":
-					chatClient.removeRoom(scanner);
+					chattingClient.removeRoom(scanner);
 					break;
 				case "Q", "q":
 					layer--;
@@ -123,7 +118,7 @@ public class ChatClientMain {
 
 				case "2":
 
-					chatClient.sendMessage(scanner);
+					chattingClient.sendMessage(scanner);
 					break;
 
 

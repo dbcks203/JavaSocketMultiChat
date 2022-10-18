@@ -93,7 +93,7 @@ public class SocketClient {
 				}
 			} catch(IOException e) {
 				e.printStackTrace();
-				chatServer.removeSocketClient(this);
+				//chatServer.removeSocketClient(this);
 			}
 		});
 	}

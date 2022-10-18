@@ -2,11 +2,6 @@ package socketproject;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import java.util.Collections;
-import java.util.HashMap;
-
-import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,7 +12,6 @@ public class ChatServer {
 	//필드
 	ServerSocket serverSocket;
 	ExecutorService threadPool = Executors.newFixedThreadPool(100);
-	Map<String, SocketClient> chatRoom = Collections.synchronizedMap(new HashMap<>());
 	MemberRepository memberRepository = new MemberRepository();
 
 
@@ -42,23 +36,9 @@ public class ChatServer {
 		});
 		thread.start();
 	}
-	/*
-	//메소드: 클라이언트 연결시 SocketClient 생성 및 추가
-	public void addSocketClient(SocketClient socketClient) {
-		String key = socketClient.chatName + "@" + socketClient.clientIp;
-		chatRoom.put(key, socketClient);
-		System.out.println("입장: " + key);
-		System.out.println("현재 채팅자 수: " + chatRoom.size() + "\n");
-	}
-*/
-	//메소드: 클라이언트 연결 종료시 SocketClient 제거
+
 	
-	public void removeSocketClient(SocketClient socketClient) {
-		String key = socketClient.chatName + "@" + socketClient.clientIp;
-		chatRoom.remove(key);
-		System.out.println("나감: " + key);
-		System.out.println("현재 채팅자 수: " + chatRoom.size() + "\n");
-	}
+
 
 	public void sendMessage(SocketClient sender, String message) {
 		JSONObject root = new JSONObject();
@@ -88,7 +68,6 @@ public class ChatServer {
 		try {
 			serverSocket.close();
 			threadPool.shutdownNow();
-			chatRoom.values().stream().forEach(sc -> sc.close());
 			System.out.println( "[서버] 종료됨 ");
 		} catch (IOException e1) {}
 	}
@@ -108,7 +87,7 @@ public class ChatServer {
 			chatServer.start();
 
 			System.out.println("----------------------------------------------------");
-			System.out.println("[채팅모드를 종료하려면 q를 입력하고 Enter]");
+			System.out.println("[종료커맨드 : 'q' or 'Q']");
 			System.out.println("----------------------------------------------------");
 
 			Scanner scanner = new Scanner(System.in);
