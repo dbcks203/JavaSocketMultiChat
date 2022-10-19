@@ -1,4 +1,4 @@
-package socketproject;
+package finalsocket;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +30,7 @@ public class RoomManager {
         Room newRoom = new Room(this, roomNumber, title );
         roomNumber++;
         rooms.add(newRoom);
+        //for (int i = 0; i < clients.size(); i++) { clients.get(i).sendStatus(); }
     }
 
     public void destroyRoom(Room room) {
